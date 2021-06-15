@@ -8,7 +8,7 @@ router.post('/', (req, res) => {
     console.log(req.body)
     //VALIDAÇÃO DO QUE PRECISA CADASTRAR
     let user = new User(req.body)
-    user.   save()
+    user.save()
     .then((user) =>{
         res.status(200).json({
             user: user
