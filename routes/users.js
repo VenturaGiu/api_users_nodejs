@@ -1,4 +1,6 @@
 const express = require('express')
+const jwt = require('../config/jwt')
+const userModel = require('../model/user.model')
 const User = require('../model/user.model')
 var router = express.Router()
 
@@ -110,6 +112,21 @@ router.delete('/:_id', (req, res) => {
             message: err.message || 'Houston, we have a problem'
         })
     })
+})
+
+//LOGIN
+router.post('/login', async (req, res) => {
+    const { email, password} = req.body
+    try{
+        const user = await userModel.findOne({email, password})
+        const token = jwt.sign({user: user._id})
+        if(!user){
+            return res.send(401)
+        }
+        res.send(token)
+    }catch(err){
+        res.send(err+ 'ta errado')
+    }
 })
 
 module.exports = router
