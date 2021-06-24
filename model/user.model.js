@@ -15,6 +15,10 @@ const UserSchema = mongoose.Schema({
         type: String,
         required: true,
         set: value =>  crypto.createHash('md5').update(value).digest('hex')
+    },
+    admin:{
+        type: Boolean,
+        required: true
     }
 },
 {
