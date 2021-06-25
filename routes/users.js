@@ -11,14 +11,22 @@ let router = express.Router()
 // });
 
 function auth(req, res, next) {
-    if (!req.headers.authorization) {
-        return res.status(403).json({ error: 'No credentials sent!' });
+    // if (!req.headers.authorization) {
+    //     return res.status(403).json({ error: 'No credentials sent!' });
+    // }
+    const token = req.headers.authorization
+    try {
+        const verified = jwt.verify(token)
+        if(verified.user == false){
+            console.log(verified.user)
+            return res.status(403).json({message: 'Acesso Negado'})
+        }
+    } catch (error) {
+        console.log(error)
+        console.log('Usuário Sem Acesso')
+        res.sendStatus(403)
     }
     next();
-};
-
-function permissoes(req, res, next){
-
 };
 
 //SETAR UM DADO NO BANCO ATRAVÉS DO /USERS
@@ -45,11 +53,14 @@ router.post('/', auth, (req, res) => {
 })
 
 //METODO GET PARA LISTAR TODOS OS ENVOLVIDOS
-router.get('/listAll', auth, (req, res) => {
+router.get('/listAll', (req, res) => {
     console.log('auth:' + req.headers.authorization)
+    const token = req.headers.authorization
+    const verified = jwt.verify(token)
     User.find()
         .then(users => {
-            res.status(200).json(users)
+            console.log(verified.user)
+            res.status(200).json({usuarios: users, token: verified.user})
         }).catch(err => {
             res.status(500).json({
                 message: err.message || 'Houston, we have a problem'
@@ -92,7 +103,7 @@ router.put('/:_id', auth, (req, res) => {
     })
 })
 
-//DELETAR USUÁRIO ATRAVÉS DO E-MAIL (NO CORPO DO JSON)
+//BUSCAR USUÁRIO ATRAVÉS DO E-MAIL (NO CORPO DO JSON)
 router.get('/email/:email', async (req, res) => {
     let obj = {
         email: req.params.email
@@ -137,11 +148,12 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body
     try {
         const user = await User.findOne({ email, password })
-        const token = jwt.sign({ user: user._id })
+        const token = jwt.sign({ user: user.admin })
+        const verified = jwt.verify(token)
         if (!user) {
             return res.send(401)
         }
-        res.json({ token: token })
+        res.json({ token: token, permissao: verified.user })
     } catch (err) {
         res.json({
             message: err.message || 'Houston, we have a problem'
